@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Lookbook{% endblock %}
+
+{% block content %}
+<h1>Lookbook</h1>
+{% for look in lookbooks %}
+    <div>
+        <h2>{{ look.title }}</h2>
+        <p>{{ look.description }}</p>
+        {% if look.image %}
+            <img src="{{ look.image.url }}" style="max-width: 300px;">
+        {% endif %}
+    </div>
+{% empty %}
+    <p>Нет образов</p>
+{% endfor %}
+{% endblock %}
