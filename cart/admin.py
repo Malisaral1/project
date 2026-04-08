@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # cart/admin.py
 from django.contrib import admin
 from .models import Cart, CartItem
@@ -25,3 +26,8 @@ class CartAdmin(admin.ModelAdmin):
 class CartItemAdmin(admin.ModelAdmin):
     list_display = ['cart', 'product', 'size', 'quantity', 'get_total_cost', 'created_at']
     list_filter = ['cart', 'product']
+=======
+from django.contrib import admin
+
+# Register your models here.
+>>>>>>> 0f83cef365a9ee6e8294d229fd89b0bdb5e5e39b

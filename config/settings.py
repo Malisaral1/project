@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+<<<<<<< HEAD
 """
 Django settings for config project.
 
@@ -22,6 +23,8 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+=======
+>>>>>>> 0f83cef365a9ee6e8294d229fd89b0bdb5e5e39b
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.

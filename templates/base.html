@@ -1,11 +1,17 @@
+<<<<<<< HEAD
 <!-- templates/base.html -->
+=======
+>>>>>>> 0f83cef365a9ee6e8294d229fd89b0bdb5e5e39b
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Интернет-магазин одежды{% endblock %}</title>
+<<<<<<< HEAD
     
+=======
+>>>>>>> 0f83cef365a9ee6e8294d229fd89b0bdb5e5e39b
     <style>
         * {
             margin: 0;
@@ -35,7 +41,10 @@
             list-style: none;
             display: flex;
             gap: 20px;
+<<<<<<< HEAD
             flex-wrap: wrap;
+=======
+>>>>>>> 0f83cef365a9ee6e8294d229fd89b0bdb5e5e39b
         }
         .menu a {
             color: #fff;
@@ -51,6 +60,7 @@
             padding: 1rem;
             margin-top: 2rem;
         }
+<<<<<<< HEAD
         /* Сообщения (для уведомлений корзины) */
         .messages {
             margin-bottom: 20px;
@@ -77,6 +87,9 @@
         }
     </style>
     
+=======
+    </style>
+>>>>>>> 0f83cef365a9ee6e8294d229fd89b0bdb5e5e39b
     {% block extra_css %}{% endblock %}
 </head>
 <body>
@@ -87,14 +100,20 @@
                 <ul class="menu">
                     <li><a href="/">Главная</a></li>
                     <li><a href="{% url 'shop:product_list' %}">Каталог</a></li>
+<<<<<<< HEAD
                     <li><a href="{% url 'lookbook:lookbook_list' %}">Lookbook</a></li>
                     <li><a href="{% url 'cart:cart_detail' %}">Корзина</a></li>
+=======
+                    <li><a href="/lookbook/">Lookbook</a></li>
+                    <li><a href="/cart/">Корзина</a></li>
+>>>>>>> 0f83cef365a9ee6e8294d229fd89b0bdb5e5e39b
                 </ul>
             </nav>
         </div>
     </header>
 
     <main class="container">
+<<<<<<< HEAD
         <!-- Сообщения (уведомления от корзины и других действий) -->
         {% if messages %}
         <div class="messages">
@@ -106,6 +125,8 @@
         </div>
         {% endif %}
         
+=======
+>>>>>>> 0f83cef365a9ee6e8294d229fd89b0bdb5e5e39b
         {% block content %}
         {% endblock %}
     </main>

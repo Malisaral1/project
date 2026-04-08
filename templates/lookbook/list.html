@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!-- templates/lookbook/list.html -->
 {% extends 'base.html' %}
 
@@ -55,4 +56,23 @@
 .lookbook-card-info p { color: #666; font-size: 0.9rem; }
 .no-items { text-align: center; color: #999; padding: 50px; font-size: 1.2rem; }
 </style>
+=======
+{% extends "base.html" %}
+
+{% block title %}Lookbook{% endblock %}
+
+{% block content %}
+<h1>Lookbook</h1>
+{% for look in lookbooks %}
+    <div>
+        <h2>{{ look.title }}</h2>
+        <p>{{ look.description }}</p>
+        {% if look.image %}
+            <img src="{{ look.image.url }}" style="max-width: 300px;">
+        {% endif %}
+    </div>
+{% empty %}
+    <p>Нет образов</p>
+{% endfor %}
+>>>>>>> 0f83cef365a9ee6e8294d229fd89b0bdb5e5e39b
 {% endblock %}

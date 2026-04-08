@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!-- templates/lookbook/detail.html -->
 {% extends 'base.html' %}
 
@@ -348,3 +349,16 @@ document.addEventListener('keydown', function(e) {
 });
 </script>
 {% endblock %}
+=======
+{% extends "base.html" %}
+
+{% block title %}{{ lookbook.title }}{% endblock %}
+
+{% block content %}
+<h1>{{ lookbook.title }}</h1>
+<p>{{ lookbook.description }}</p>
+{% if lookbook.image %}
+    <img src="{{ lookbook.image.url }}" alt="{{ lookbook.title }}" style="max-width: 100%;">
+{% endif %}
+{% endblock %}python manage.py runserver
+>>>>>>> 0f83cef365a9ee6e8294d229fd89b0bdb5e5e39b

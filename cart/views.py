@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # cart/views.py
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
@@ -93,3 +94,8 @@ def cart_clear(request):
     
     messages.success(request, 'Корзина очищена.')
     return redirect('cart:cart_detail')
+=======
+from django.shortcuts import render
+
+# Create your views here.
+>>>>>>> 0f83cef365a9ee6e8294d229fd89b0bdb5e5e39b
