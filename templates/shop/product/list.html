@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {% if category %}
+        {{ category.name }}
+    {% else %}
+        Каталог товаров
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+    <div style="display: flex; gap: 30px;">
+        <!-- Боковая панель с категориями -->
+        <div style="width: 250px;">
+            <h3>Категории</h3>
+            <ul style="list-style: none;">
+                <li {% if not category %}style="font-weight: bold;"{% endif %}>
+                    <a href="{% url 'shop:product_list' %}">Все товары</a>
+                </li>
+                {% for c in categories %}
+                    <li {% if category.slug == c.slug %}style="font-weight: bold;"{% endif %}>
+                        <a href="{{ c.get_absolute_url }}">{{ c.name }}</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+        
+        <!-- Список товаров -->
+        <div style="flex: 1;">
+            <h1>{% if category %}{{ category.name }}{% else %}Все товары{% endif %}</h1>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px;">
+                {% for product in products %}
+                    <div style="border: 1px solid #ddd; padding: 15px; border-radius: 5px;">
+                        <a href="{{ product.get_absolute_url }}">
+                            {% if product.image %}
+                                <img src="{{ product.image.url }}" alt="{{ product.name }}" style="width: 100%; height: 200px; object-fit: cover;">
+                            {% else %}
+                                <div style="width: 100%; height: 200px; background: #f0f0f0; display: flex; align-items: center; justify-content: center;">Нет фото</div>
+                            {% endif %}
+                            <h3 style="margin: 10px 0;">{{ product.name }}</h3>
+                            <p style="font-weight: bold; color: #e44d26;">{{ product.price }} ₽</p>
+                        </a>
+                    </div>
+                {% empty %}
+                    <p>Товаров пока нет</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

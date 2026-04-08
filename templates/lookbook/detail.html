@@ -1,0 +1,350 @@
+<!-- templates/lookbook/detail.html -->
+{% extends 'base.html' %}
+
+{% block title %}{{ item.title }} - Lookbook{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ============================================ */
+/* ГЛАВНЫЙ КОНТЕЙНЕР */
+/* ============================================ */
+.lookbook-detail {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 40px;
+    padding: 20px 0;
+}
+
+@media (min-width: 900px) {
+    .lookbook-detail {
+        grid-template-columns: 2fr 1fr;
+    }
+}
+
+/* ============================================ */
+/* КОНТЕЙНЕР ДЛЯ ФОТО */
+/* ============================================ */
+.lookbook-image-container {
+    position: relative !important;
+    display: block !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.lookbook-image {
+    width: 100% !important;
+    height: auto !important;
+    display: block !important;
+    border-radius: 8px;
+}
+
+/* ============================================ */
+/* КЛИКАБЕЛЬНЫЕ ТОЧКИ */
+/* ============================================ */
+.hotspot {
+    position: absolute !important;
+    width: 24px !important;
+    height: 24px !important;
+    background: rgba(255, 255, 255, 0.9) !important;
+    border: 3px solid #333 !important;
+    border-radius: 50% !important;
+    cursor: pointer !important;
+    transform: translate(-50%, -50%) !important;
+    z-index: 9999 !important;
+    opacity: 1 !important;
+}
+
+.hotspot:hover {
+    background: #333 !important;
+    border-color: #fff !important;
+    transform: translate(-50%, -50%) scale(1.3) !important;
+    z-index: 10000 !important;
+}
+
+/* ============================================ */
+/* Боковая панель */
+/* ============================================ */
+.lookbook-sidebar {
+    background: #f9f9f9;
+    padding: 25px;
+    border-radius: 8px;
+}
+
+.lookbook-sidebar h2 {
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.lookbook-products {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.lookbook-product-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.lookbook-product-item img {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+.lookbook-product-info {
+    flex: 1;
+}
+
+.lookbook-product-info h4 {
+    margin-bottom: 5px;
+    color: #333;
+}
+
+.lookbook-product-info .price {
+    color: #e74c3c;
+    font-weight: bold;
+}
+
+.add-to-cart-btn {
+    background: #333;
+    color: #fff;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.add-all-btn {
+    width: 100%;
+    background: #e74c3c;
+    color: #fff;
+    border: none;
+    padding: 15px;
+    margin-top: 20px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+/* ============================================ */
+/* Модальное окно */
+/* ============================================ */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 10000;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal.active {
+    display: flex;
+}
+
+.modal-content {
+    background: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    max-width: 500px;
+    width: 90%;
+    position: relative;
+}
+
+.modal-close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    font-size: 24px;
+    cursor: pointer;
+    color: #999;
+}
+
+.modal-product {
+    display: flex;
+    gap: 20px;
+}
+
+.modal-product img {
+    width: 150px;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+.modal-product-info h3 {
+    margin-bottom: 10px;
+}
+
+.modal-product-info .price {
+    font-size: 1.3rem;
+    color: #e74c3c;
+    font-weight: bold;
+    margin: 10px 0;
+}
+
+.modal-add-btn {
+    background: #333;
+    color: #fff;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="lookbook-detail">
+    <!-- Фото образа с точками -->
+    <div>
+        <div class="lookbook-image-container" id="imageContainer">
+            <img src="{{ item.image.url }}" alt="{{ item.title }}" class="lookbook-image" id="lookbookImage">
+            
+            <!-- Кликабельные точки -->
+            {% for hotspot in hotspots_data %}
+            <div class="hotspot" 
+                 style="left: {{ hotspot.x }}%; top: {{ hotspot.y }}%;"
+                 data-product-id="{{ hotspot.product.id }}"
+                 data-product-name="{{ hotspot.product.name }}"
+                 data-product-price="{{ hotspot.product.price }}"
+                 data-product-image="{{ hotspot.product.image.url }}"
+                 data-product-composition="{{ hotspot.product.composition }}"
+                 title="{{ hotspot.product.name }}">
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- Боковая панель -->
+    <div class="lookbook-sidebar">
+        <h2>{{ item.title }}</h2>
+        <p>{{ item.description }}</p>
+        
+        <h3>В этом образе:</h3>
+        <ul class="lookbook-products">
+            {% for product in products_in_lookbook %}
+            <li class="lookbook-product-item">
+                <img src="{{ product.image.url }}" alt="{{ product.name }}">
+                <div class="lookbook-product-info">
+                    <h4>{{ product.name }}</h4>
+                    <p class="price">{{ product.price }} ₽</p>
+                </div>
+                <button class="add-to-cart-btn" 
+                        onclick="addToCart({{ product.id }}, '{{ product.name }}', {{ product.price }})">
+                    В корзину
+                </button>
+            </li>
+            {% empty %}
+            <p>В этом образе пока нет товаров.</p>
+            {% endfor %}
+        </ul>
+        
+        <button class="add-all-btn" onclick="addAllToCart()">
+            🛒 Добавить весь образ в корзину
+        </button>
+    </div>
+</div>
+
+<!-- Модальное окно -->
+<div class="modal" id="productModal">
+    <div class="modal-content">
+        <span class="modal-close" onclick="closeModal()">&times;</span>
+        <div class="modal-product">
+            <img id="modalImage" src="" alt="">
+            <div class="modal-product-info">
+                <h3 id="modalName"></h3>
+                <p class="price" id="modalPrice"></p>
+                <p class="composition" id="modalComposition"></p>
+                <button class="modal-add-btn" id="modalAddBtn">Добавить в корзину</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Отладка
+document.addEventListener('DOMContentLoaded', function() {
+    var container = document.getElementById('imageContainer');
+    if (!container) {
+        console.log('Container not found!');
+        return;
+    }
+    
+    var hotspots = container.querySelectorAll('.hotspot');
+    
+    console.log('=== LOOKBOOK DEBUG ===');
+    console.log('Total hotspots:', hotspots.length);
+    
+    for (var i = 0; i < hotspots.length; i++) {
+        var hs = hotspots[i];
+        console.log('Point ' + (i+1) + ': left=' + hs.style.left + ', top=' + hs.style.top);
+    }
+    
+    console.log('======================');
+});
+
+// Клик на точку
+var allHotspots = document.querySelectorAll('.hotspot');
+for (var i = 0; i < allHotspots.length; i++) {
+    allHotspots[i].addEventListener('click', function() {
+        var productId = this.dataset.productId;
+        var productName = this.dataset.productName;
+        var productPrice = this.dataset.productPrice;
+        var productImage = this.dataset.productImage;
+        var productComposition = this.dataset.composition;
+        
+        document.getElementById('modalImage').src = productImage;
+        document.getElementById('modalName').textContent = productName;
+        document.getElementById('modalPrice').textContent = productPrice + ' ₽';
+        document.getElementById('modalComposition').textContent = productComposition;
+        
+        var addBtn = document.getElementById('modalAddBtn');
+        addBtn.onclick = function() {
+            addToCart(productId, productName, productPrice);
+            closeModal();
+        };
+        
+        document.getElementById('productModal').classList.add('active');
+    });
+}
+
+// Закрытие модального окна
+function closeModal() {
+    document.getElementById('productModal').classList.remove('active');
+}
+
+var modal = document.getElementById('productModal');
+modal.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeModal();
+    }
+});
+
+// Добавление в корзину
+function addToCart(productId, productName, price) {
+    alert('Товар "' + productName + '" добавлен в корзину! (цена: ' + price + ' ₽)');
+}
+
+// Добавить весь образ
+function addAllToCart() {
+    alert('Все товары из образа добавлены в корзину!');
+}
+
+// Закрытие по Escape
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeModal();
+    }
+});
+</script>
+{% endblock %}

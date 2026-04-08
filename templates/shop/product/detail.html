@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}{{ product.name }}{% endblock %}
+
+{% block content %}
+    <div style="display: flex; gap: 50px;">
+        <!-- Изображение товара -->
+        <div style="flex: 1;">
+            {% if product.image %}
+                <img src="{{ product.image.url }}" alt="{{ product.name }}" style="width: 100%; max-width: 500px;">
+            {% endif %}
+        </div>
+        
+        <!-- Информация о товаре -->
+        <div style="flex: 1;">
+            <h1>{{ product.name }}</h1>
+            <p style="color: #666;">Категория: <a href="{{ product.category.get_absolute_url }}">{{ product.category.name }}</a></p>
+            <p style="font-size: 24px; font-weight: bold; color: #e44d26;">{{ product.price }} ₽</p>
+            
+            {% if product.composition %}
+                <p><strong>Состав:</strong> {{ product.composition }}</p>
+            {% endif %}
+            
+            <p><strong>Описание:</strong> {{ product.description|linebreaks }}</p>
+            
+            <!-- Выбор размера -->
+            {% if product.sizes %}
+                <div style="margin: 20px 0;">
+                    <label for="size"><strong>Выберите размер:</strong></label>
+                    <select id="size" style="padding: 5px; margin-left: 10px;">
+                        {% for size in product.sizes %}
+                            <option value="{{ size }}">{{ size }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            {% endif %}
+            
+            <!-- Кнопка добавления в корзину -->
+            <button style="background: #e44d26; color: white; border: none; padding: 15px 30px; font-size: 16px; cursor: pointer; border-radius: 5px;">
+                Добавить в корзину
+            </button>
+        </div>
+    </div>
+{% endblock %}
