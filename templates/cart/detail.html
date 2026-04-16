@@ -1,149 +1,204 @@
-<!-- templates/cart/detail.html -->
-{% extends 'base.html' %}
+{% extends "base.html" %}
+{% load static %}
 
-{% block title %}Корзина{% endblock %}
+{% block title %}Корзина — CAPLINK{% endblock %}
 
 {% block content %}
-<div class="cart-page">
-    <h1>Корзина</h1>
-    
-    {% if items %}
-    <div class="cart-items">
-        {% for item in items %}
-        <div class="cart-item">
-            <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
-            <div class="cart-item-info">
-                <h3>{{ item.product.name }}</h3>
-                {% if item.size %}
-                <p class="size">Размер: {{ item.size }}</p>
-                {% endif %}
-                <p class="price">{{ item.product.price }} ₽ × {{ item.quantity }} = {{ item.get_total_cost }} ₽</p>
+<section class="cart-page">
+    <div class="cart-container">
+        <h1 class="cart-page-title">КОРЗИНА</h1>
+        
+        <div class="cart-content">
+            <!-- Левая колонка: Товары -->
+            <div class="cart-items-section">
+                <div id="cart-items">
+                    <!-- Товары загружаются через JavaScript -->
+                </div>
+                
+                <!-- Продолжить покупки -->
+                <div class="cart-continue-shopping">
+                    <a href="{% url 'shop:product_list' %}" class="btn-continue">
+                        ← Продолжить покупки
+                    </a>
+                </div>
             </div>
-            <div class="cart-item-actions">
-                <form action="{% url 'cart:cart_update' item.id %}" method="POST" class="quantity-form">
-                    {% csrf_token %}
-                    <input type="number" name="quantity" value="{{ item.quantity }}" min="1" max="10">
-                    <button type="submit">Обновить</button>
-                </form>
-                <a href="{% url 'cart:cart_remove' item.id %}" class="remove-btn">Удалить</a>
-            </div>
+            
+            <!-- Правая колонка: Итого -->
+            <aside class="cart-summary">
+                <h3 class="summary-title">ИТОГО</h3>
+                
+                <div class="summary-row">
+                    <span>Товары:</span>
+                    <span id="summary-subtotal">0 ₽</span>
+                </div>
+                
+                <div class="summary-divider"></div>
+                
+                <div class="summary-row summary-total">
+                    <span>Общая сумма:</span>
+                    <span id="summary-total">0 ₽</span>
+                </div>
+                
+                <a href="{% url 'orders:checkout' %}" class="btn-checkout">
+                    Оформить заказ
+                </a>
+                
+                <p class="cart-note">
+                    * Доставка и оплата будут рассчитаны после оформления заказа
+                </p>
+            </aside>
         </div>
-        {% endfor %}
     </div>
-    
-    <div class="cart-summary">
-        <div class="total">
-            <span>Итого:</span>
-            <span>{{ cart.get_total_price }} ₽</span>
-        </div>
-        <div class="cart-buttons">
-            <a href="{% url 'cart:cart_clear' %}" class="clear-btn">Очистить корзину</a>
-            <a href="{% url 'orders:order_create' %}" class="checkout-btn">Оформить заказ</a>
-        </div>
-    </div>
-    
-    {% else %}
-    <div class="cart-empty">
-        <p>Ваша корзина пуста</p>
-        <a href="{% url 'shop:product_list' %}" class="continue-shopping">Перейти в каталог</a>
-    </div>
-    {% endif %}
-</div>
+</section>
 
-<style>
-.cart-page { padding: 20px 0; }
-.cart-items { margin-bottom: 30px; }
-.cart-item {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    padding: 20px;
-    border: 1px solid #eee;
-    border-radius: 8px;
-    margin-bottom: 15px;
+<script>
+document.addEventListener('DOMContentLoaded', loadCart);
+
+// Загрузка корзины
+function loadCart() {
+    fetch('{% url "cart:cart_api" %}')
+        .then(response => response.json())
+        .then(data => {
+            renderCart(data);
+        })
+        .catch(error => {
+            console.error('Error loading cart:', error);
+            document.getElementById('cart-items').innerHTML = `
+                <div class="cart-empty">
+                    <p>Ошибка загрузки корзины</p>
+                    <a href="{% url 'shop:product_list' %}" class="btn-continue">Перейти в каталог</a>
+                </div>
+            `;
+        });
 }
-.cart-item img {
-    width: 100px;
-    height: 100px;
-    object-fit: cover;
-    border-radius: 4px;
+
+// Отрисовка корзины
+function renderCart(cart) {
+    const container = document.getElementById('cart-items');
+    let total = 0;
+    let itemCount = 0;
+    
+    if (Object.keys(cart).length === 0) {
+        container.innerHTML = `
+            <div class="cart-empty">
+                <h2>Ваша корзина пуста</h2>
+                <p>Добавьте товары из каталога или lookbook</p>
+                <a href="{% url 'shop:product_list' %}" class="btn-continue">Перейти в каталог</a>
+                <a href="{% url 'lookbook:lookbook_list' %}" class="btn-continue">Смотреть образы</a>
+            </div>
+        `;
+        updateSummary(0, 0);
+        return;
+    }
+    
+    let html = '';
+    for (const [key, item] of Object.entries(cart)) {
+        const itemTotal = parseFloat(item.price) * item.quantity;
+        total += itemTotal;
+        itemCount += item.quantity;
+        
+        html += `
+            <div class="cart-item" data-cart-key="${key}">
+                <div class="cart-item-image-wrapper">
+                    <img src="${item.image}" alt="${item.name}" class="cart-item-image">
+                </div>
+                
+                <div class="cart-item-details">
+                    <h3 class="cart-item-name">${item.name}</h3>
+                    <p class="cart-item-size">Размер: <span>${item.size}</span></p>
+                    <p class="cart-item-price">${item.price} ₽</p>
+                </div>
+                
+                <div class="cart-item-quantity-wrapper">
+                    <button class="cart-quantity-btn" onclick="updateQuantity('${key}', ${item.quantity - 1})">−</button>
+                    <span class="cart-quantity-value">${item.quantity}</span>
+                    <button class="cart-quantity-btn" onclick="updateQuantity('${key}', ${item.quantity + 1})">+</button>
+                </div>
+                
+                <div class="cart-item-total">
+                    <span>${itemTotal.toFixed(0)} ₽</span>
+                </div>
+                
+                <button class="cart-remove-btn" onclick="removeFromCart('${key}')" title="Удалить">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+        `;
+    }
+    
+    container.innerHTML = html;
+    updateSummary(total, itemCount);
 }
-.cart-item-info { flex: 1; }
-.cart-item-info h3 { margin-bottom: 10px; }
-.cart-item-info .size { color: #666; font-size: 0.9rem; }
-.cart-item-info .price { font-weight: bold; color: #e74c3c; }
-.cart-item-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+
+// Обновление итогов
+function updateSummary(total, itemCount) {
+    document.getElementById('summary-subtotal').textContent = total.toFixed(0) + ' ₽';
+    document.getElementById('summary-total').textContent = total.toFixed(0) + ' ₽';
+    updateCartCount(itemCount);
 }
-.quantity-form {
-    display: flex;
-    gap: 10px;
+
+// Обновление количества
+function updateQuantity(cartKey, newQuantity) {
+    if (newQuantity < 1) {
+        removeFromCart(cartKey);
+        return;
+    }
+    
+    fetch('{% url "cart:cart_update" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({
+            cart_key: cartKey,
+            quantity: newQuantity
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            loadCart();
+        }
+    })
+    .catch(error => console.error('Error updating quantity:', error));
 }
-.quantity-form input {
-    width: 60px;
-    padding: 5px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
+
+// Удаление товара
+function removeFromCart(cartKey) {
+    fetch('{% url "cart:cart_remove" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({ cart_key: cartKey })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            loadCart();
+        }
+    })
+    .catch(error => console.error('Error removing item:', error));
 }
-.quantity-form button {
-    background: #333;
-    color: #fff;
-    border: none;
-    padding: 5px 15px;
-    border-radius: 4px;
-    cursor: pointer;
+
+// Get CSRF Token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
 }
-.remove-btn {
-    color: #e74c3c;
-    text-decoration: none;
-}
-.remove-btn:hover { text-decoration: underline; }
-.cart-summary {
-    background: #f9f9f9;
-    padding: 20px;
-    border-radius: 8px;
-}
-.total {
-    display: flex;
-    justify-content: space-between;
-    font-size: 1.2rem;
-    font-weight: bold;
-    margin-bottom: 20px;
-}
-.cart-buttons {
-    display: flex;
-    gap: 15px;
-}
-.clear-btn, .checkout-btn {
-    padding: 12px 25px;
-    border-radius: 4px;
-    text-decoration: none;
-    font-weight: bold;
-}
-.clear-btn {
-    background: #95a5a6;
-    color: #fff;
-}
-.checkout-btn {
-    background: #e74c3c;
-    color: #fff;
-    flex: 1;
-    text-align: center;
-}
-.cart-empty {
-    text-align: center;
-    padding: 50px;
-}
-.continue-shopping {
-    display: inline-block;
-    margin-top: 20px;
-    padding: 12px 25px;
-    background: #333;
-    color: #fff;
-    text-decoration: none;
-    border-radius: 4px;
-}
-</style>
+</script>
 {% endblock %}

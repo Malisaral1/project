@@ -1,11 +1,19 @@
-#  настроим админку, чтобы мы могли добавлять товары и образы (4-й этап плана).
+# shop/admin.py
 from django.contrib import admin
-from .models import Category, Product
+from .models import Category, Product, ProductImage, ProductSize
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ['name', 'slug']
-    prepopulated_fields = {'slug': ('name',)}  # Автозаполнение slug от name
+    prepopulated_fields = {'slug': ('name',)}
+
+class ProductImageInline(admin.TabularInline):
+    model = ProductImage
+    extra = 1
+
+class ProductSizeInline(admin.TabularInline):
+    model = ProductSize
+    extra = 1
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
@@ -13,5 +21,4 @@ class ProductAdmin(admin.ModelAdmin):
     list_filter = ['available', 'created', 'category']
     list_editable = ['price', 'available']
     prepopulated_fields = {'slug': ('name',)}
-    search_fields = ['name', 'description']
-    
+    inlines = [ProductImageInline, ProductSizeInline]

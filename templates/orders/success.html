@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Заказ оформлен — CAPLINK{% endblock %}
+
+{% block content %}
+<section class="order-success-page">
+    <div class="success-container">
+        <div class="success-icon">
+            <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+        </div>
+        
+        <h1 class="success-title">СПАСИБО ЗА ЗАКАЗ!</h1>
+        
+        <p class="success-text">
+            Ваш заказ №{{ order.id }} успешно оформлен
+        </p>
+        
+        <div class="success-details">
+            <p><strong>Имя:</strong> {{ order.first_name }} {{ order.last_name }}</p>
+            <p><strong>Email:</strong> {{ order.email }}</p>
+            <p><strong>Телефон:</strong> {{ order.phone }}</p>
+            <p><strong>Сумма:</strong> {{ order.total_amount|floatformat:0 }} ₽</p>
+        </div>
+        
+        <p class="success-note">
+            Наш менеджер свяжется с вами в ближайшее время для подтверждения заказа.
+        </p>
+        
+        <div class="success-actions">
+            <a href="{% url 'shop:product_list' %}" class="btn-continue-shopping">
+                Продолжить покупки
+            </a>
+            <a href="{% url 'lookbook:lookbook_list' %}" class="btn-view-lookbook">
+                Смотреть образы
+            </a>
+        </div>
+    </div>
+</section>
+{% endblock %}

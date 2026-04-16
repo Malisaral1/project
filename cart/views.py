@@ -1,101 +1,125 @@
-<<<<<<< HEAD
 # cart/views.py
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib import messages
-from .models import Cart, CartItem
 from shop.models import Product
-
-def get_or_create_cart(request):
-    """Получить или создать корзину для текущей сессии"""
-    cart_id = request.session.get('cart_id')
-    
-    if cart_id:
-        try:
-            cart = Cart.objects.get(id=cart_id)
-            return cart
-        except Cart.DoesNotExist:
-            pass
-    
-    # Создаём новую корзину
-    cart = Cart.objects.create()
-    request.session['cart_id'] = cart.id
-    return cart
-
+from django.http import JsonResponse
+import json
 
 def cart_detail(request):
     """Страница корзины"""
-    cart = get_or_create_cart(request)
-    # Важно: select_related для оптимизации запросов
-    items = cart.items.select_related('product').all()
-    
-    return render(request, 'cart/detail.html', {
-        'cart': cart,
-        'items': items
-    })
+    cart = request.session.get('cart', {})
+    return render(request, 'cart/detail.html', {'cart': cart})
 
+def cart_api(request):
+    """API: Возвращает корзину в формате JSON"""
+    cart = request.session.get('cart', {})
+    return JsonResponse(cart)
 
-def cart_add(request, product_id):
-    """Добавить товар в корзину"""
+def cart_add(request):
     if request.method == 'POST':
-        cart = get_or_create_cart(request)
+        data = json.loads(request.body)
+        product_id = data.get('product_id')
+        size = data.get('size')
+        quantity = int(data.get('quantity', 1))
+        
         product = get_object_or_404(Product, id=product_id)
+        cart = request.session.get('cart', {})
         
-        # Получаем размер из POST-запроса (если есть)
-        size = request.POST.get('size', '')
-        
-        # Проверяем, есть ли уже такой товар в корзине
-        cart_item, created = CartItem.objects.get_or_create(
-            cart=cart,
-            product=product,
-            size=size,
-            defaults={'quantity': 1}
-        )
-        
-        if not created:
-            # Если товар уже есть — увеличиваем количество
-            cart_item.quantity += 1
-            cart_item.save()
-        
-        messages.success(request, f'Товар "{product.name}" добавлен в корзину!')
-    
-    return redirect('cart:cart_detail')
-
-
-def cart_remove(request, item_id):
-    """Удалить товар из корзины"""
-    cart = get_or_create_cart(request)
-    item = get_object_or_404(CartItem, id=item_id, cart=cart)
-    item.delete()
-    
-    messages.success(request, 'Товар удалён из корзины.')
-    return redirect('cart:cart_detail')
-
-
-def cart_update(request, item_id):
-    """Обновить количество товара в корзине"""
-    cart = get_or_create_cart(request)
-    item = get_object_or_404(CartItem, id=item_id, cart=cart)
-    
-    if request.method == 'POST':
-        quantity = int(request.POST.get('quantity', 1))
-        if quantity > 0:
-            item.quantity = quantity
-            item.save()
+        cart_key = f'{product_id}_{size}'
+        if cart_key in cart:
+            cart[cart_key]['quantity'] += quantity
         else:
-            item.delete()
+            cart[cart_key] = {
+                'product_id': product.id,
+                'name': product.name,
+                'price': str(product.price),
+                'size': size,
+                'quantity': quantity,
+                'image': product.images.first().image.url if product.images.exists() else ''
+            }
+        
+        request.session['cart'] = cart
+        request.session.modified = True
+        
+        return JsonResponse({
+            'success': True, 
+            'cart_count': sum(item['quantity'] for item in cart.values())
+        })
+
+def cart_remove(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        cart_key = data.get('cart_key')
+        cart = request.session.get('cart', {})
+        
+        if cart_key in cart:
+            del cart[cart_key]
+            request.session['cart'] = cart
+            request.session.modified = True
+        
+        return JsonResponse({'success': True})
+
+def cart_update(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        cart_key = data.get('cart_key')
+        quantity = int(data.get('quantity'))
+        
+        cart = request.session.get('cart', {})
+        if cart_key in cart and quantity >= 1:
+            cart[cart_key]['quantity'] = quantity
+            request.session['cart'] = cart
+            request.session.modified = True
+        
+        return JsonResponse({'success': True})
+def add_lookbook_to_cart(request, slug):
+    """Добавить весь образ с выбранными размерами"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Method not allowed'}, status=405)
     
-    return redirect('cart:cart_detail')
-
-
-def cart_clear(request):
-    """Очистить корзину"""
-    cart = get_or_create_cart(request)
-    cart.items.all().delete()
-    
-    messages.success(request, 'Корзина очищена.')
-    return redirect('cart:cart_detail')
-=======
-from django.shortcuts import render
-
-# Create your views here.
->>>>>>> 0f83cef365a9ee6e8294d229fd89b0bdb5e5e39b
+    try:
+        from lookbook.models import LookbookItem
+        import json
+        
+        # Получаем данные из запроса
+        data = json.loads(request.body)
+        selected_sizes = data.get('sizes', {})  # Словарь {product_id: size}
+        
+        lookbook = get_object_or_404(LookbookItem, slug=slug)
+        hotspots = lookbook.hotspots.select_related('product').all()
+        
+        cart = request.session.get('cart', {})
+        items_added = 0
+        
+        for hotspot in hotspots:
+            product = hotspot.product
+            # ✅ Используем выбранный размер или дефолтный
+            size = selected_sizes.get(str(product.id), '30 мл')
+            cart_key = f'{product.id}_{size}'
+            
+            if cart_key in cart:
+                cart[cart_key]['quantity'] += 1
+            else:
+                cart[cart_key] = {
+                    'product_id': product.id,
+                    'name': product.name,
+                    'price': str(product.price),
+                    'size': size,
+                    'quantity': 1,
+                    'image': product.images.first().image.url if product.images.exists() else ''
+                }
+            items_added += 1
+        
+        request.session['cart'] = cart
+        request.session.modified = True
+        
+        return JsonResponse({
+            'success': True,
+            'cart_count': sum(item['quantity'] for item in cart.values()),
+            'items_added': items_added
+        })
+        
+    except Exception as e:
+        return JsonResponse({
+            'success': False, 
+            'error': str(e)
+        }, status=500)

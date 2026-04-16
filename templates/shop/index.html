@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Главная — CAPLINK{% endblock %}
+
+{% block content %}
+<!-- Hero Banner - Minimalist Search Style -->
+<section class="hero-banner">
+    <div class="hero-image-wrapper">
+        <img src="{% static 'images/she-banner.png' %}" alt="CAPLINK Banner" class="hero-image">
+        <div class="hero-overlay">
+            <h1 class="hero-title">SHE</h1>
+            <p class="hero-subtitle">Интерактивный lookbook</p>
+            <a href="{% url 'lookbook:lookbook_list' %}" class="btn-hero">Смотреть образы</a>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Lookbook (переместили наверх) -->
+<section class="featured-lookbook">
+    <h2 class="section-title">Свежие образы</h2>
+    <div class="lookbook-preview-grid">
+        {% for lookbook in featured_lookbooks %}
+        <a href="{{ lookbook.get_absolute_url }}" class="lookbook-preview-card">
+            <img src="{{ lookbook.image.url }}" alt="{{ lookbook.name }}" class="lookbook-preview-image">
+            <span class="lookbook-preview-name">{{ lookbook.name }}</span>
+        </a>
+        {% endfor %}
+    </div>
+    <div class="text-center">
+        <a href="{% url 'lookbook:lookbook_list' %}" class="btn-secondary">Все образы</a>
+    </div>
+</section>
+
+<!-- Catalog Banner (новый блок как на фото с цветами) -->
+<section class="catalog-banner">
+    <div class="catalog-banner-content">
+        <div class="catalog-banner-image">
+            <!-- Замените на ваше фото с цветами -->
+            <img src="{% static 'images/C:\Users\alisa\OneDrive\Рабочий стол\diploma_shop\static\images\📍.jpeg' %}" alt="Каталог" style="width: 100%; height: 100%; object-fit: cover;">
+        </div>
+        <div class="catalog-banner-text">
+            <h3 class="catalog-banner-title">22:22</h3>
+            <p class="catalog-banner-description">
+                Коллекция, рожденная в мгновении, когда сердце замирает 
+                в ожидании прекрасного. Каждая вещь — это история, 
+                которую вы создаёте сами.
+            </p>
+            <a href="{% url 'shop:product_list' %}" class="catalog-banner-link">Смотреть каталог</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

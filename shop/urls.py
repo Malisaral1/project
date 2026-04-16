@@ -1,18 +1,12 @@
-<<<<<<< HEAD
 # shop/urls.py
 from django.urls import path
 from . import views
 
-app_name = 'shop'  # ← Обязательно! Без этого namespace не работает
-=======
-from django.urls import path
-from . import views
-
 app_name = 'shop'
->>>>>>> 0f83cef365a9ee6e8294d229fd89b0bdb5e5e39b
 
 urlpatterns = [
-    path('', views.product_list, name='product_list'),
-    path('<slug:category_slug>/', views.product_list, name='product_list_by_category'),
+    path('', views.index, name='index'),
+    path('catalog/', views.product_list, name='product_list'),
+    path('catalog/<slug:category_slug>/', views.product_list, name='product_list_by_category'),
     path('product/<int:id>/<slug:slug>/', views.product_detail, name='product_detail'),
 ]

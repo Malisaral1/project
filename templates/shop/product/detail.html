@@ -1,44 +1,94 @@
 {% extends "base.html" %}
+{% load static %}
 
-{% block title %}{{ product.name }}{% endblock %}
+{% block title %}{{ product.name }} — CAPLINK{% endblock %}
 
 {% block content %}
-    <div style="display: flex; gap: 50px;">
-        <!-- Изображение товара -->
-        <div style="flex: 1;">
-            {% if product.image %}
-                <img src="{{ product.image.url }}" alt="{{ product.name }}" style="width: 100%; max-width: 500px;">
+<section class="product-detail-page">
+    <div class="product-detail-main">
+        <!-- Фото товара (слева) -->
+        <div class="product-detail-images">
+            {% if product.images.first %}
+            <img src="{{ product.images.first.image.url }}" alt="{{ product.name }}" class="product-main-image">
+            {% else %}
+            <img src="{% static 'images/no-image.jpg' %}" alt="Нет фото" class="product-main-image">
             {% endif %}
         </div>
         
-        <!-- Информация о товаре -->
-        <div style="flex: 1;">
-            <h1>{{ product.name }}</h1>
-            <p style="color: #666;">Категория: <a href="{{ product.category.get_absolute_url }}">{{ product.category.name }}</a></p>
-            <p style="font-size: 24px; font-weight: bold; color: #e44d26;">{{ product.price }} ₽</p>
+        <!-- Информация о товаре (справа, как в lookbook) -->
+        <div class="product-detail-info">
+            <h1 class="product-title">{{ product.name }}</h1>
+            <p class="product-price">{{ product.price }} ₽</p>
+            
+            <p class="product-description">{{ product.description }}</p>
             
             {% if product.composition %}
-                <p><strong>Состав:</strong> {{ product.composition }}</p>
+            <div class="product-composition">
+                <strong>Состав:</strong> {{ product.composition }}
+            </div>
             {% endif %}
             
-            <p><strong>Описание:</strong> {{ product.description|linebreaks }}</p>
+            {% if product.care %}
+            <div class="product-care">
+                <strong>Уход:</strong> {{ product.care }}
+            </div>
+            {% endif %}
             
             <!-- Выбор размера -->
-            {% if product.sizes %}
-                <div style="margin: 20px 0;">
-                    <label for="size"><strong>Выберите размер:</strong></label>
-                    <select id="size" style="padding: 5px; margin-left: 10px;">
-                        {% for size in product.sizes %}
-                            <option value="{{ size }}">{{ size }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-            {% endif %}
+            <div class="product-size-selector">
+                <label for="size-select">Размер:</label>
+                <select id="size-select" class="size-select">
+                    {% for size_obj in product.sizes.all %}
+                        {% if size_obj.stock > 0 %}
+                        <option value="{{ size_obj.size }}">{{ size_obj.size }} (в наличии: {{ size_obj.stock }})</option>
+                        {% endif %}
+                    {% empty %}
+                        <option value="M">M (стандарт)</option>
+                    {% endfor %}
+                </select>
+            </div>
             
             <!-- Кнопка добавления в корзину -->
-            <button style="background: #e44d26; color: white; border: none; padding: 15px 30px; font-size: 16px; cursor: pointer; border-radius: 5px;">
+            <button onclick="addToCartFromDetail({{ product.id }})" class="btn-add-to-cart-full">
                 Добавить в корзину
             </button>
+            
+            <!-- Кнопка "Назад" -->
+            <a href="javascript:history.back()" class="btn-back">← Вернуться назад</a>
         </div>
     </div>
+</section>
+
+<script>
+    async function addToCartFromDetail(productId) {
+        const size = document.getElementById('size-select').value;
+        
+        try {
+            const response = await fetch('/cart/add/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    product_id: productId,
+                    size: size,
+                    quantity: 1
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                updateCartCount(data.cart_count);
+                alert('Товар добавлен в корзину!');
+            } else {
+                alert('Ошибка при добавлении товара');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Произошла ошибка. Попробуйте позже.');
+        }
+    }
+</script>
 {% endblock %}

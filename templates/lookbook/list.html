@@ -1,78 +1,22 @@
-<<<<<<< HEAD
-<!-- templates/lookbook/list.html -->
-{% extends 'base.html' %}
+{% extends "base.html" %}
+{% load static %}
 
-{% block title %}Lookbook - Готовые образы{% endblock %}
+{% block title %}Lookbook — CAPLINK{% endblock %}
 
 {% block content %}
-<div class="lookbook-page">
-    <h1>Lookbook</h1>
-    <p class="lookbook-description">Вдохновляющие образы от наших стилистов. Нажмите на образ, чтобы увидеть детали и купить вещи.</p>
+<section class="lookbook-list-page">
+    <h1 class="page-title">LOOKBOOK</h1>
+    <p class="page-subtitle">Вдохновляющие образы от стилиста</p>
     
-    <div class="lookbook-grid">
-        {% for item in items %}
-        <div class="lookbook-card">
-            <a href="{% url 'lookbook:lookbook_detail' item.id %}">
-                <img src="{{ item.image.url }}" alt="{{ item.title }}">
-                <div class="lookbook-card-info">
-                    <h3>{{ item.title }}</h3>
-                    <p>{{ item.description|truncatewords:15 }}</p>
-                </div>
-            </a>
-        </div>
+    <div class="lookbook-preview-grid">
+        {% for look in lookbooks %}
+        <a href="{{ look.get_absolute_url }}" class="lookbook-preview-card">
+            <img src="{{ look.image.url }}" alt="{{ look.name }}" class="lookbook-preview-image">
+            <span class="lookbook-preview-name">{{ look.name }}</span>
+        </a>
         {% empty %}
-        <p class="no-items">Образов пока нет. Загляните позже!</p>
+        <p class="no-lookbooks">Нет образов. Добавьте их в админ-панели.</p>
         {% endfor %}
     </div>
-</div>
-
-<style>
-.lookbook-page { padding: 20px 0; }
-.lookbook-description { color: #666; margin-bottom: 30px; font-size: 1.1rem; }
-.lookbook-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 30px;
-}
-.lookbook-card {
-    border: 1px solid #eee;
-    border-radius: 8px;
-    overflow: hidden;
-    transition: transform 0.3s, box-shadow 0.3s;
-}
-.lookbook-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-}
-.lookbook-card img {
-    width: 100%;
-    height: 400px;
-    object-fit: cover;
-    display: block;
-}
-.lookbook-card a { text-decoration: none; color: inherit; }
-.lookbook-card-info { padding: 15px; }
-.lookbook-card-info h3 { margin-bottom: 10px; color: #333; }
-.lookbook-card-info p { color: #666; font-size: 0.9rem; }
-.no-items { text-align: center; color: #999; padding: 50px; font-size: 1.2rem; }
-</style>
-=======
-{% extends "base.html" %}
-
-{% block title %}Lookbook{% endblock %}
-
-{% block content %}
-<h1>Lookbook</h1>
-{% for look in lookbooks %}
-    <div>
-        <h2>{{ look.title }}</h2>
-        <p>{{ look.description }}</p>
-        {% if look.image %}
-            <img src="{{ look.image.url }}" style="max-width: 300px;">
-        {% endif %}
-    </div>
-{% empty %}
-    <p>Нет образов</p>
-{% endfor %}
->>>>>>> 0f83cef365a9ee6e8294d229fd89b0bdb5e5e39b
+</section>
 {% endblock %}

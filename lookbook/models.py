@@ -2,31 +2,41 @@ from django.db import models
 from shop.models import Product
 
 class LookbookItem(models.Model):
-    title = models.CharField('Название образа', max_length=200)
-    image = models.ImageField('Фото образа', upload_to='lookbook/%Y/%m/%d')
-    description = models.TextField('Описание образа', blank=True)
-    created = models.DateTimeField('Дата создания', auto_now_add=True)
-    active = models.BooleanField('Активно', default=True)
-    products = models.ManyToManyField(Product, through='Hotspot')
+    name = models.CharField(max_length=200)
+    slug = models.SlugField(max_length=200, unique=True)
+    image = models.ImageField(upload_to='lookbook/%Y/%m/%d')
+    description = models.TextField(blank=True)
+    products = models.ManyToManyField(Product, through='Hotspot', related_name='lookbooks')
+    created = models.DateTimeField(auto_now_add=True)
+    is_featured = models.BooleanField(default=False, verbose_name='Главный образ')
     
     class Meta:
-        verbose_name = 'Образ'
-        verbose_name_plural = 'Образы'
         ordering = ['-created']
+        verbose_name = 'Образ'
+        verbose_name_plural = 'Lookbook'
     
     def __str__(self):
-        return self.title
+        return self.name
+    
+    def get_absolute_url(self):
+        from django.urls import reverse
+        return reverse('lookbook:lookbook_detail', args=[self.slug])
+
 
 class Hotspot(models.Model):
-    lookbook_item = models.ForeignKey(LookbookItem, on_delete=models.CASCADE)
+    lookbook = models.ForeignKey(
+        LookbookItem, 
+        on_delete=models.CASCADE, 
+        related_name='hotspots'
+    )
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    x_percent = models.FloatField('Координата X (%)')
-    y_percent = models.FloatField('Координата Y (%)')
+    position_x = models.FloatField(help_text='Позиция X в процентах (0-100)')
+    position_y = models.FloatField(help_text='Позиция Y в процентах (0-100)')
     
     class Meta:
-        verbose_name = 'Точка'
-        verbose_name_plural = 'Точки'
-        unique_together = ('lookbook_item', 'product')
+        ordering = ['position_y', 'position_x']
+        verbose_name = 'Кликабельная точка'
+        verbose_name_plural = 'Кликабельные точки'
     
     def __str__(self):
-        return f'{self.product.name} на {self.lookbook_item.title}'
+        return f'{self.lookbook.name} - {self.product.name}'

@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # cart/models.py
 from django.db import models
 from shop.models import Product
@@ -46,8 +45,3 @@ class CartItem(models.Model):
     def get_total_cost(self):
         """Стоимость этой позиции (цена × количество)"""
         return self.product.price * self.quantity
-=======
-from django.db import models
-
-# Create your models here.
->>>>>>> 0f83cef365a9ee6e8294d229fd89b0bdb5e5e39b

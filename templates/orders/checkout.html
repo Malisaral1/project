@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Оформление заказа — CAPLINK{% endblock %}
+
+{% block content %}
+<section class="checkout-page">
+    <div class="checkout-container">
+        <h1 class="checkout-title">ОФОРМЛЕНИЕ ЗАКАЗА</h1>
+        
+        <form method="post" class="checkout-form">
+            {% csrf_token %}
+            
+            <div class="checkout-grid">
+                <!-- Левая колонка: Данные клиента -->
+                <div class="checkout-details">
+                    <h3 class="checkout-section-title">ДАННЫЕ КЛИЕНТА</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="{{ form.first_name.id_for_label }}">Имя *</label>
+                            {{ form.first_name }}
+                        </div>
+                        <div class="form-group">
+                            <label for="{{ form.last_name.id_for_label }}">Фамилия</label>
+                            {{ form.last_name }}
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="{{ form.email.id_for_label }}">Email *</label>
+                            {{ form.email }}
+                        </div>
+                        <div class="form-group">
+                            <label for="{{ form.phone.id_for_label }}">Телефон *</label>
+                            {{ form.phone }}
+                        </div>
+                    </div>
+                    
+                    <h3 class="checkout-section-title" style="margin-top: 40px;">АДРЕС ДОСТАВКИ</h3>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.address.id_for_label }}">Адрес *</label>
+                        {{ form.address }}
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="{{ form.city.id_for_label }}">Город *</label>
+                            {{ form.city }}
+                        </div>
+                        <div class="form-group">
+                            <label for="{{ form.postal_code.id_for_label }}">Индекс</label>
+                            {{ form.postal_code }}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Правая колонка: Заказ -->
+                <aside class="checkout-summary">
+                    <h3 class="checkout-summary-title">ВАШ ЗАКАЗ</h3>
+                    
+                    <div class="checkout-items">
+                        {% for key, item in cart.items %}
+                        <div class="checkout-item">
+                            <img src="{{ item.image }}" alt="{{ item.name }}" class="checkout-item-image">
+                            <div class="checkout-item-info">
+                                <h4>{{ item.name }}</h4>
+                                <p>Размер: {{ item.size }}</p>
+                                <p>× {{ item.quantity }}</p>
+                            </div>
+                            <span class="checkout-item-price">{{ item.price|floatformat:0 }} ₽</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="checkout-divider"></div>
+                    
+                    <div class="checkout-total">
+                        <span>Итого:</span>
+                        <span>{{ total|floatformat:0 }} ₽</span>
+                    </div>
+                    
+                    <button type="submit" class="btn-place-order">
+                        Подтвердить заказ
+                    </button>
+                    
+                    <p class="checkout-note">
+                        * Менеджер свяжется с вами для подтверждения заказа
+                    </p>
+                </aside>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}

@@ -1,20 +1,21 @@
-# настроим админку, чтобы мы могли добавлять товары и образы (4-й этап плана).
+# lookbook/admin.py
 from django.contrib import admin
 from .models import LookbookItem, Hotspot
 
 class HotspotInline(admin.TabularInline):
-    """Встроенное редактирование точек на странице образа"""
     model = Hotspot
     extra = 1
-    autocomplete_fields = ['product']  # Удобный поиск товаров
+    raw_id_fields = ['product']
 
 @admin.register(LookbookItem)
 class LookbookItemAdmin(admin.ModelAdmin):
-    list_display = ['title', 'created', 'active']
-    list_filter = ['active']
-    inlines = [HotspotInline]  # Добавляем точки прямо в форму образа
-    
+    list_display = ['name', 'is_featured', 'created']
+    list_filter = ['is_featured', 'created']
+    prepopulated_fields = {'slug': ('name',)}
+    inlines = [HotspotInline]
+
 @admin.register(Hotspot)
 class HotspotAdmin(admin.ModelAdmin):
-    list_display = ['lookbook_item', 'product', 'x_percent', 'y_percent']
-    list_filter = ['lookbook_item']
+    list_display = ['lookbook', 'product', 'position_x', 'position_y']
+    list_filter = ['lookbook']
+    raw_id_fields = ['product']

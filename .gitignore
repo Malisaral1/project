@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# База данных
+db.sqlite3
+db.sqlite3-journal
+
+# Виртуальное окружение
+venv/
+env/
+ENV/
+
+# Медиа файлы
+media/
+
+# Статические файлы
+static/
+
+# Логи
+*.log
+
+# Переменные окружения
+.env
