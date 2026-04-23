@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}CAPLINK{% endblock %}</title>
+    <title>{% block title %}КАПЛИНК{% endblock %}</title>
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@300;400;700&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Montserrat:wght@300;400;500&display=swap&subset=cyrillic" rel="stylesheet">
 </head>
 
 <body>
@@ -20,13 +20,30 @@
     
     <!-- Navigation -->
     <nav class="navbar" id="navbar">
-        <a href="{% url 'shop:index' %}" class="nav-logo">CAPLINK</a>
+        <a href="{% url 'shop:index' %}" class="nav-logo">КАПЛИНК</a>
         <ul class="nav-menu">
             <li><a href="{% url 'shop:product_list' %}">Каталог</a></li>
             <li><a href="{% url 'lookbook:lookbook_list' %}">Lookbook</a></li>
-            <li><a href="#about">О нас</a></li>
+            <li><a href="{% url 'pages:about' %}">О нас</a></li>
         </ul>
         <div class="nav-icons">
+            <!-- Блок авторизации -->
+            {% if user.is_authenticated %}
+                <span class="nav-username">Привет, {{ user.username }}!</span>
+                <a href="{% url 'accounts:logout' %}" class="nav-link-auth">Выйти</a>
+                
+                <a href="{% url 'wishlist:list' %}" class="nav-link-auth" title="Избранные товары" style="margin-right: 10px;">
+                    🛍️ Товары
+                </a>
+                <a href="{% url 'favorite_looks:list' %}" class="nav-link-auth" title="Избранные образы" style="margin-right: 10px;">
+                    📸 Образы
+                </a>
+            {% else %}
+                <a href="{% url 'accounts:login' %}" class="nav-link-auth">Войти</a>
+                <a href="{% url 'accounts:register' %}" class="nav-link-auth">Регистрация</a>
+            {% endif %}
+            
+            <!-- Корзина -->
             <a href="{% url 'cart:cart_detail' %}" class="cart-icon">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M9 2L6 7H3L5 20H19L21 7H18L15 2H9Z"/>
@@ -39,7 +56,7 @@
             </a>
         </div>
     </nav>
-    
+
     <!-- Main Content -->
     <main>
         {% block content %}{% endblock %}
@@ -52,7 +69,7 @@
             <a href="#">Telegram</a>
             <a href="#">WhatsApp</a>
         </div>
-        <p class="footer-text">&copy; 2026 CAPLINK. Все права защищены.</p>
+        <p class="footer-text">&copy; 2026 КАПЛИНК. Все права защищены.</p>
     </footer>
     
     <!-- Modal for Lookbook -->
@@ -65,8 +82,125 @@
         </div>
     </div>
     
+    <!-- External JS -->
     <script src="{% static 'js/main.js' %}"></script>
     <script src="{% static 'js/lookbook.js' %}"></script>
     {% block extra_js %}{% endblock %}
+
+    <!-- ========================================
+         Единый блок скриптов (без текста на странице)
+         ======================================== -->
+    <script>
+    // 1. Вспомогательная функция для CSRF-токена
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // ========================================
+        // 2. Анимация загрузки + sessionStorage
+        // ========================================
+        const loadingScreen = document.getElementById('loadingScreen');
+        const domainInput = document.getElementById('domainInput');
+        
+        // Если анимация уже была в этой сессии — сразу скрываем
+        if (sessionStorage.getItem('caplink_animation_shown') === 'true') {
+            if (loadingScreen) loadingScreen.classList.add('hidden');
+        } else {
+            const textToType = 'БРЕНД ЖЕНСКОЙ ОДЕЖДЫ «КАПЛИНК»';
+            let charIndex = 0;
+            const typingSpeed = 60;
+            
+            function typeText() {
+                if (charIndex < textToType.length) {
+                    domainInput.textContent += textToType.charAt(charIndex);
+                    charIndex++;
+                    setTimeout(typeText, typingSpeed);
+                } else {
+                    sessionStorage.setItem('caplink_animation_shown', 'true');
+                    setTimeout(() => {
+                        if (loadingScreen) loadingScreen.classList.add('hidden');
+                    }, 500);
+                }
+            }
+            
+            if (loadingScreen && domainInput) {
+                setTimeout(typeText, 500);
+            } else {
+                if (loadingScreen) loadingScreen.classList.add('hidden');
+            }
+        }
+
+        // ========================================
+        // 3. Сердечко избранного (без перезагрузки)
+        // ========================================
+        document.querySelectorAll('.heart-form').forEach(form => {
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                // Ищем кнопку безопасно
+                const btn = this.querySelector('.heart-btn') || 
+                            this.querySelector('button[type="submit"]') ||
+                            this.querySelector('button');
+                
+                if (!btn) return;
+                
+                const isCurrentlyFav = btn.textContent.trim() === '❤️';
+                let targetUrl = this.action;
+                
+                // Если уже в избранном → меняем URL на удаление
+                if (isCurrentlyFav) {
+                    targetUrl = targetUrl.replace('/add/', '/remove/');
+                }
+
+                try {
+                    const response = await fetch(targetUrl, {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRFToken': getCookie('csrftoken')
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        btn.textContent = data.is_fav ? '❤️' : '🤍';
+                        // Микро-анимация
+                        btn.style.transform = 'scale(1.3)';
+                        setTimeout(() => btn.style.transform = 'scale(1)', 150);
+                    } else {
+                        console.error('Ошибка сервера:', response.status);
+                        this.submit(); // Fallback
+                    }
+                } catch (error) {
+                    console.error('Fetch error:', error);
+                    this.submit(); // Fallback
+                }
+            });
+        });
+
+        // ========================================
+        // 4. Показывать прелоадер при клике на ссылки
+        // ========================================
+        document.addEventListener('click', function(e) {
+            const link = e.target.closest('a');
+            if (link) {
+                const ls = document.getElementById('loadingScreen');
+                if (ls) ls.classList.remove('hidden');
+            }
+        });
+    });
+    </script>
 </body>
 </html>

@@ -5,11 +5,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const hotspotsData = window.lookbookHotspots || [];
     const imageWrapper = document.querySelector('.lookbook-image-wrapper');
     
-    console.log('Lookbook JS loaded');
-    console.log('Hotspots data:', hotspotsData);
-    
+    // Если мы не на странице lookbook — просто выходим без ошибок
     if (!imageWrapper) {
-        console.log('No image wrapper found');
         return;
     }
     
@@ -104,5 +101,29 @@ function updateCartCount(count) {
     const cartCount = document.getElementById('cartCount');
     if (cartCount) {
         cartCount.textContent = count;
+    }
+}
+// ========================================
+// Toggle Wishlist from Modal (Сердечко в модальном окне)
+// ========================================
+async function toggleWishlistModal(productId) {
+    const heartBtn = document.getElementById(`modal-heart-${productId}`);
+    const csrftoken = getCookie('csrftoken');
+    
+    try {
+        const response = await fetch(`/wishlist/add/${productId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken,
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (response.ok) {
+            // Меняем цвет сердечка на красный
+            if (heartBtn) heartBtn.textContent = '❤️';
+        }
+    } catch (error) {
+        console.error('Ошибка при добавлении в избранное:', error);
     }
 }

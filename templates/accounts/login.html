@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Вход — CAPLINK{% endblock %}
+
+{% block content %}
+<section class="auth-section">
+    <div class="auth-container">
+        <div class="auth-card">
+            <h1 class="auth-title">Вход в аккаунт</h1>
+            <p class="auth-subtitle">Добро пожаловать в CAPLINK</p>
+            
+            <form method="post" class="auth-form" novalidate>
+                {% csrf_token %}
+                {{ form.non_field_errors }}
+                
+                {% for field in form %}
+                <div class="form-group">
+                    {{ field.label_tag }}
+                    {{ field }}
+                    {% if field.errors %}
+                        <span class="form-error">{{ field.errors|striptags }}</span>
+                    {% endif %}
+                    {% if field.help_text %}
+                        <small class="form-help">{{ field.help_text }}</small>
+                    {% endif %}
+                </div>
+                {% endfor %}
+                
+                <div class="forgot-password-wrapper">
+                    <a href="{% url 'password_reset' %}" class="forgot-password-link">Забыли пароль?</a>
+                </div>
+                
+                <button type="submit" class="auth-btn">Войти</button>
+            </form>
+            
+            <div class="auth-footer">
+                <p>Нет аккаунта? <a href="{% url 'accounts:register' %}" class="auth-link">Зарегистрироваться</a></p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

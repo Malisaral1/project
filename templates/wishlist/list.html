@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% load static %}
+{% load wishlist_tags %}
+
+{% block title %}Избранные товары — КАПЛИНК{% endblock %}
+
+{% block content %}
+<div class="cart-container">
+    <h1 class="cart-title">Избранные товары</h1>
+    
+    {% if favorites %}
+    <div class="favorites-grid">
+        {% for fav in favorites %}
+        <div class="cart-item">
+            <a href="{{ fav.product.get_absolute_url }}" class="cart-item-link">
+                <div class="cart-item-image">
+                    {% if fav.product.images.first %}
+                        <img src="{{ fav.product.images.first.image.url }}" alt="{{ fav.product.name }}">
+                    {% else %}
+                        <img src="{% static 'images/no-image.jpg' %}" alt="Нет фото">
+                    {% endif %}
+                </div>
+            </a>
+            <div class="cart-item-details">
+                <h3 class="cart-item-name">{{ fav.product.name }}</h3>
+                <p class="cart-item-price">{{ fav.product.price }} ₽</p>
+                
+                <!-- ✅ ИСПРАВЛЕНО: fav.product.id вместо item.product.id -->
+                <form action="{% url 'wishlist:remove' fav.product.id %}" method="post" class="delete-form">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-remove">Удалить</button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="cart-empty">
+        <p>В избранном пока пусто</p>
+        <a href="{% url 'shop:product_list' %}" class="btn-cart-primary">Перейти в каталог</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

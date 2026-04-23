@@ -7,7 +7,28 @@ import json
 def cart_detail(request):
     """Страница корзины"""
     cart = request.session.get('cart', {})
-    return render(request, 'cart/detail.html', {'cart': cart})
+    
+    # Преобразуем словарь сессии в список для шаблона
+    cart_items = []
+    total_price = 0
+    
+    for key, item_data in cart.items():
+        # Добавляем вычисляемые поля
+        item = {
+            **item_data,  # Копируем все поля из сессии
+            'total_price': float(item_data['price']) * item_data['quantity'],
+            'cart_key': key,  # Сохраняем ключ для удаления/обновления
+        }
+        cart_items.append(item)
+        total_price += item['total_price']
+    
+    print("🛒 ПОДГОТОВЛЕННЫЕ ДАННЫЕ:", cart_items)  # Для отладки
+    
+    return render(request, 'cart/detail.html', {
+        'cart_items': cart_items,  # ← Теперь шаблон найдёт эту переменную!
+        'cart_total': total_price,
+        'cart_count': sum(item['quantity'] for item in cart_items),
+    })
 
 def cart_api(request):
     """API: Возвращает корзину в формате JSON"""

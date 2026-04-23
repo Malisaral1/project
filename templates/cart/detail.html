@@ -1,204 +1,142 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Корзина — CAPLINK{% endblock %}
+{% block title %}Корзина — КАПЛИНК{% endblock %}
 
 {% block content %}
-<section class="cart-page">
+<div class="cart-page">
     <div class="cart-container">
         <h1 class="cart-page-title">КОРЗИНА</h1>
         
+        {% if cart_items %}
         <div class="cart-content">
-            <!-- Левая колонка: Товары -->
-            <div class="cart-items-section">
-                <div id="cart-items">
-                    <!-- Товары загружаются через JavaScript -->
+            <!-- Список товаров -->
+            <div class="cart-items">
+                {% for item in cart_items %}
+                <div class="cart-item-row">
+                    <div class="cart-item-image">
+                        {% if item.image %}
+                            <img src="{{ item.image }}" alt="{{ item.name }}">
+                        {% else %}
+                            <img src="{% static 'images/no-image.jpg' %}" alt="Нет фото">
+                        {% endif %}
+                    </div>
+                    
+                    <div class="cart-item-info">
+                        <h3 class="cart-item-name">{{ item.name }}</h3>
+                        <p class="cart-item-size">Размер: <span>{{ item.size|default:"ONE SIZE" }}</span></p>
+                        <p class="cart-item-price">{{ item.price }} ₽</p>
+                    </div>
+                    
+                    <div class="cart-item-quantity">
+                        <button type="button" class="qty-btn" onclick="updateQuantity('{{ item.cart_key }}', {{ item.quantity }} - 1)">−</button>
+                        <span class="qty-value">{{ item.quantity }}</span>
+                        <button type="button" class="qty-btn" onclick="updateQuantity('{{ item.cart_key }}', {{ item.quantity }} + 1)">+</button>
+                    </div>
+                    
+                    <div class="cart-item-total">
+                        {{ item.total_price|floatformat:2 }} ₽
+                    </div>
+                    
+                    <div class="cart-remove-form">
+                        <button type="button" class="remove-btn" onclick="removeItem('{{ item.cart_key }}')">×</button>
+                    </div>
                 </div>
-                
-                <!-- Продолжить покупки -->
-                <div class="cart-continue-shopping">
-                    <a href="{% url 'shop:product_list' %}" class="btn-continue">
-                        ← Продолжить покупки
-                    </a>
-                </div>
+                {% endfor %}
             </div>
             
-            <!-- Правая колонка: Итого -->
-            <aside class="cart-summary">
-                <h3 class="summary-title">ИТОГО</h3>
-                
+            <!-- Итого -->
+            <div class="cart-summary-box">
+                <h2 class="summary-title">ИТОГО</h2>
                 <div class="summary-row">
                     <span>Товары:</span>
-                    <span id="summary-subtotal">0 ₽</span>
+                    <span>{{ cart_total|floatformat:2 }} ₽</span>
                 </div>
-                
                 <div class="summary-divider"></div>
-                
-                <div class="summary-row summary-total">
-                    <span>Общая сумма:</span>
-                    <span id="summary-total">0 ₽</span>
+                <div class="summary-total-row">
+                    <strong>Общая сумма:</strong>
+                    <strong>{{ cart_total|floatformat:2 }} ₽</strong>
                 </div>
-                
-                <a href="{% url 'orders:checkout' %}" class="btn-checkout">
-                    Оформить заказ
-                </a>
-                
-                <p class="cart-note">
-                    * Доставка и оплата будут рассчитаны после оформления заказа
-                </p>
-            </aside>
+                <a href="{% url 'orders:checkout' %}" class="checkout-btn">ОФОРМИТЬ ЗАКАЗ</a>
+                <p class="checkout-note">* Доставка и оплата будут рассчитаны после оформления заказа</p>
+            </div>
         </div>
+        
+        <div class="cart-continue">
+            <a href="{% url 'shop:product_list' %}" class="continue-shopping-btn">← ПРОДОЛЖИТЬ ПОКУПКИ</a>
+        </div>
+        
+        {% else %}
+        <div class="cart-empty">
+            <h2>Ваша корзина пуста</h2>
+            <p>Добавьте товары из каталога или lookbook</p>
+            <div class="cart-empty-actions">
+                <a href="{% url 'shop:product_list' %}" class="btn-primary">Перейти в каталог</a>
+                <a href="{% url 'lookbook:lookbook_list' %}" class="btn-secondary">Смотреть Lookbook</a>
+            </div>
+        </div>
+        {% endif %}
     </div>
-</section>
+</div>
 
 <script>
-document.addEventListener('DOMContentLoaded', loadCart);
-
-// Загрузка корзины
-function loadCart() {
-    fetch('{% url "cart:cart_api" %}')
-        .then(response => response.json())
-        .then(data => {
-            renderCart(data);
-        })
-        .catch(error => {
-            console.error('Error loading cart:', error);
-            document.getElementById('cart-items').innerHTML = `
-                <div class="cart-empty">
-                    <p>Ошибка загрузки корзины</p>
-                    <a href="{% url 'shop:product_list' %}" class="btn-continue">Перейти в каталог</a>
-                </div>
-            `;
-        });
-}
-
-// Отрисовка корзины
-function renderCart(cart) {
-    const container = document.getElementById('cart-items');
-    let total = 0;
-    let itemCount = 0;
-    
-    if (Object.keys(cart).length === 0) {
-        container.innerHTML = `
-            <div class="cart-empty">
-                <h2>Ваша корзина пуста</h2>
-                <p>Добавьте товары из каталога или lookbook</p>
-                <a href="{% url 'shop:product_list' %}" class="btn-continue">Перейти в каталог</a>
-                <a href="{% url 'lookbook:lookbook_list' %}" class="btn-continue">Смотреть образы</a>
-            </div>
-        `;
-        updateSummary(0, 0);
-        return;
-    }
-    
-    let html = '';
-    for (const [key, item] of Object.entries(cart)) {
-        const itemTotal = parseFloat(item.price) * item.quantity;
-        total += itemTotal;
-        itemCount += item.quantity;
-        
-        html += `
-            <div class="cart-item" data-cart-key="${key}">
-                <div class="cart-item-image-wrapper">
-                    <img src="${item.image}" alt="${item.name}" class="cart-item-image">
-                </div>
-                
-                <div class="cart-item-details">
-                    <h3 class="cart-item-name">${item.name}</h3>
-                    <p class="cart-item-size">Размер: <span>${item.size}</span></p>
-                    <p class="cart-item-price">${item.price} ₽</p>
-                </div>
-                
-                <div class="cart-item-quantity-wrapper">
-                    <button class="cart-quantity-btn" onclick="updateQuantity('${key}', ${item.quantity - 1})">−</button>
-                    <span class="cart-quantity-value">${item.quantity}</span>
-                    <button class="cart-quantity-btn" onclick="updateQuantity('${key}', ${item.quantity + 1})">+</button>
-                </div>
-                
-                <div class="cart-item-total">
-                    <span>${itemTotal.toFixed(0)} ₽</span>
-                </div>
-                
-                <button class="cart-remove-btn" onclick="removeFromCart('${key}')" title="Удалить">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M18 6L6 18M6 6l12 12"/>
-                    </svg>
-                </button>
-            </div>
-        `;
-    }
-    
-    container.innerHTML = html;
-    updateSummary(total, itemCount);
-}
-
-// Обновление итогов
-function updateSummary(total, itemCount) {
-    document.getElementById('summary-subtotal').textContent = total.toFixed(0) + ' ₽';
-    document.getElementById('summary-total').textContent = total.toFixed(0) + ' ₽';
-    updateCartCount(itemCount);
-}
-
-// Обновление количества
-function updateQuantity(cartKey, newQuantity) {
-    if (newQuantity < 1) {
-        removeFromCart(cartKey);
-        return;
-    }
-    
-    fetch('{% url "cart:cart_update" %}', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCookie('csrftoken')
-        },
-        body: JSON.stringify({
-            cart_key: cartKey,
-            quantity: newQuantity
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            loadCart();
-        }
-    })
-    .catch(error => console.error('Error updating quantity:', error));
-}
-
-// Удаление товара
-function removeFromCart(cartKey) {
-    fetch('{% url "cart:cart_remove" %}', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCookie('csrftoken')
-        },
-        body: JSON.stringify({ cart_key: cartKey })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            loadCart();
-        }
-    })
-    .catch(error => console.error('Error removing item:', error));
-}
-
-// Get CSRF Token
-function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
+    // Получение CSRF-токена из cookies
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
             }
         }
+        return cookieValue;
     }
-    return cookieValue;
-}
+
+    // Обновление количества товара
+    async function updateQuantity(cartKey, newQuantity) {
+        if (newQuantity < 1) {
+            removeItem(cartKey);
+            return;
+        }
+
+        try {
+            const response = await fetch('{% url "cart:cart_update" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({ cart_key: cartKey, quantity: newQuantity })
+            });
+            if (response.ok) location.reload();
+        } catch (error) {
+            console.error('Ошибка обновления количества:', error);
+            alert('Не удалось обновить количество. Попробуйте позже.');
+        }
+    }
+
+    // Удаление товара из корзины
+    async function removeItem(cartKey) {
+        if (!confirm('Удалить этот товар из корзины?')) return;
+
+        try {
+            const response = await fetch('{% url "cart:cart_remove" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({ cart_key: cartKey })
+            });
+            if (response.ok) location.reload();
+        } catch (error) {
+            console.error('Ошибка удаления товара:', error);
+            alert('Не удалось удалить товар. Попробуйте позже.');
+        }
+    }
 </script>
 {% endblock %}

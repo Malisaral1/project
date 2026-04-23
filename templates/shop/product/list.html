@@ -1,53 +1,105 @@
-<!-- templates/shop/product/list.html -->
 {% extends "base.html" %}
 {% load static %}
+{% load wishlist_tags %}
 
-{% block title %}Каталог{% endblock %}
+{% block title %}Каталог — КАПЛИНК{% endblock %}
 
 {% block content %}
-<div class="categories-section" style="padding-top: 120px;">
-    <h1 class="categories-title">КАТАЛОГ</h1>
+<!-- Шапка каталога (в стиле Lookbook) -->
+<section class="catalog-header">
+    <h1 class="main-title">КАТАЛОГ</h1>
+    <p class="subtitle">Все новинки и бестселлеры</p>
+</section>
+
+<div class="container py-4">
     
-    <!-- Filters -->
-    <div style="margin-bottom: 40px; display: flex; gap: 20px; justify-content: center;">
-    <form method="get" style="display: flex; gap: 10px;">
-        <input type="number" name="min_price" placeholder="От" style="padding: 10px; border: 1px solid #ddd;">
-        <input type="number" name="max_price" placeholder="До" style="padding: 10px; border: 1px solid #ddd;">
-        <button type="submit" class="add-to-cart-btn">Применить</button>
-    </form>
-    </div>
-    
-    <!-- Categories -->
-    <div class="categories-scroll">
-    <!-- ВСЕ — с фото/градиентом -->
-    <a href="{% url 'shop:product_list' %}" class="category-card">
-        <div class="category-image" style="background: linear-gradient(135deg, #800020 0%, #1a1a1a 100%); display: flex; align-items: center; justify-content: center;">
-            <span style="color: white; font-size: 1.5rem; letter-spacing: 3px;">ВСЕ</span>
-        </div>
-    </a>
-    <!-- Остальные категории -->
-    {% for cat in categories %}
-    <a href="{{ cat.get_absolute_url }}" class="category-card">
-        <div class="category-image" style="background: linear-gradient(135deg, #1a1a1a 0%, #800020 100%); display: flex; align-items: center; justify-content: center;">
-            <span style="color: white; font-size: 1.2rem; letter-spacing: 2px;">{{ cat.name|upper }}</span>
-        </div>
-    </a>
-    {% endfor %}
+    <!-- Фильтры по цене -->
+    <div class="catalog-filters">
+        <form method="get" class="filter-form">
+            <input type="number" name="min_price" placeholder="От (₽)" class="filter-input">
+            <input type="number" name="max_price" placeholder="До (₽)" class="filter-input">
+            <button type="submit" class="filter-btn">Показать</button>
+            <a href="{% url 'shop:product_list' %}" class="filter-reset">Сбросить</a>
+        </form>
     </div>
 
-<!-- Products -->
-<div class="product-grid">
-    {% for product in products %}
-    <!-- ✅ Добавили ссылку на карточку товара -->
-    <a href="{% url 'shop:product_detail' product.id product.slug %}" class="product-card">
-        {% if product.images.first %}
-        <img src="{{ product.images.first.image.url }}" alt="{{ product.name }}" class="product-card-image">
-        {% endif %}
-        <div class="product-card-info">
-            <h3 class="product-card-name">{{ product.name }}</h3>
-            <p class="product-card-price">{{ product.price }} ₽</p>
+    <!-- Категории в стиле бейджей -->
+    {% url 'shop:product_list' as all_products_url %}
+    <div class="categories-badge-strip" role="list">
+        <!-- ВСЕ -->
+        <a href="{{ all_products_url }}" 
+           class="category-badge-slot {% if request.path == all_products_url %}category-badge-slot--active{% endif %}"
+           role="listitem"
+           tabindex="0"
+           aria-label="Все товары">
+            <div class="category-badge-face" aria-hidden="true">
+                <span class="category-badge-emoji">🛍️</span>
+            </div>
+            <div class="category-badge-tip" role="tooltip">
+                <strong class="category-badge-tip-title">Все товары</strong>
+                
+            </div>
+        </a>
+    
+        <!-- Остальные категории -->
+        {% for cat in categories %}
+        <a href="{{ cat.get_absolute_url }}" 
+           class="category-badge-slot {% if request.path == cat.get_absolute_url %}category-badge-slot--active{% endif %}"
+           role="listitem"
+           tabindex="0"
+           aria-label="{{ cat.name }}">
+            <div class="category-badge-face" aria-hidden="true">
+                {% if cat.icon %}
+                    <img src="{{ cat.icon.url }}" alt="" class="category-badge-img">
+                {% else %}
+                    <span class="category-badge-emoji">{{ cat.get_emoji }}</span>
+                {% endif %}
+            </div>
+            <div class="category-badge-tip" role="tooltip">
+                <strong class="category-badge-tip-title">{{ cat.name }}</strong>
+                {% if cat.description %}
+                <p class="category-badge-tip-desc">{{ cat.description }}</p>
+                {% endif %}
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+
+        <!-- Сетка товаров -->
+    <div class="product-grid">
+        {% for product in products %}
+        <div class="product-card-wishlist">
+            <!-- Ссылка только на картинку (как в избранном) -->
+            <a href="{% url 'shop:product_detail' product.id product.slug %}" class="card-link">
+                <div class="card-image-wrapper">
+                    {% if product.images.first %}
+                        <img src="{{ product.images.first.image.url }}" alt="{{ product.name }}" class="card-img">
+                    {% else %}
+                        <img src="{% static 'images/no-image.jpg' %}" alt="Нет фото" class="card-img">
+                    {% endif %}
+                </div>
+            </a>
+            
+            <div class="card-content">
+                <h3 class="card-title">{{ product.name }}</h3>
+                <p class="card-price">{{ product.price }} ₽</p>
+                
+                <!-- Кнопка (Сердечко) внизу, как в избранном -->
+                {% if user.is_authenticated %}
+                <div class="card-actions">
+                    <form action="{% url 'wishlist:add' product.id %}" method="post" class="heart-form">
+                        {% csrf_token %}
+                        {% is_in_favorites user product as is_fav %}
+                        <!-- Используем класс btn-remove, чтобы кнопка была широкой и внизу -->
+                        <button type="submit" class="btn-remove" style="border: none; font-size: 1.5rem; color: var(--burgundy);">
+                            {% if is_fav %}❤️{% else %}🤍{% endif %}
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
         </div>
-    </a>
-    {% endfor %}
+        {% endfor %}
+    </div>
 </div>
 {% endblock %}

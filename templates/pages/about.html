@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}О нас — КАПЛИНК{% endblock %}
+
+{% block content %}
+<!-- Шапка страницы -->
+<section class="about-header">
+    <h1 class="about-title">О НАС</h1>
+    <p class="about-subtitle">История бренда КАПЛИНК</p>
+</section>
+
+<div class="container py-5">
+    
+    <!-- Блок 1: Философия -->
+    <section class="about-section">
+        <div class="about-content">
+            <h2 class="about-section-title">Философия</h2>
+            <p class="about-text">
+                Мы верим, что одежда — это не просто ткань, а способ выразить себя. 
+                CAPLINK создан для тех, кто ценит стиль, качество и удобство. 
+                Мы не просто продаём вещи — мы помогаем собирать образы, в которых вы будете чувствовать себя уверенно.
+            </p>
+        </div>
+    </section>
+
+    <!-- Блок 2: Наша фишка -->
+    <section class="about-section about-section--alt">
+        <div class="about-content">
+            <h2 class="about-section-title">Наша фишка</h2>
+            <p class="about-text">
+                Главная особенность CAPLINK — <strong>интерактивный lookbook</strong>. 
+                Просматривайте готовые образы от стилистов, кликайте на понравившиеся вещи 
+                и добавляйте их в корзину в один клик. Хотите весь комплект? 
+                Нажмите «Добавить образ» — и всё готово.
+            </p>
+        </div>
+    </section>
+
+    <!-- Блок 3: Ценности -->
+    <section class="about-section">
+        <div class="about-content">
+            <h2 class="about-section-title">Ценности</h2>
+            <ul class="about-values">
+                <li>
+                    <span class="about-value-icon">🎨</span>
+                    <div>
+                        <strong>Визуальная эстетика</strong>
+                        <p>Каждый образ продуман до мелочей</p>
+                    </div>
+                </li>
+                <li>
+                    <span class="about-value-icon">♻️</span>
+                    <div>
+                        <strong>Осознанный выбор</strong>
+                        <p>Мы сотрудничаем с поставщиками, которые разделяют наши ценности</p>
+                    </div>
+                </li>
+                <li>
+                    <span class="about-value-icon">🚀</span>
+                    <div>
+                        <strong>Удобство</strong>
+                        <p>Интуитивный интерфейс и быстрая доставка</p>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- Завершающий блок -->
+    <section class="about-cta">
+        <h2 class="about-cta-title">Присоединяйтесь к миру КАПЛИНК</h2>
+        <div class="about-cta-buttons">
+            <a href="{% url 'shop:product_list' %}" class="btn-about-primary">Перейти в каталог</a>
+            <a href="{% url 'lookbook:lookbook_list' %}" class="btn-about-secondary">Смотреть Lookbook</a>
+        </div>
+    </section>
+
+</div>
+{% endblock %}

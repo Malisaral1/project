@@ -5,10 +5,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const loadingScreen = document.getElementById('loadingScreen');
     const domainInput = document.getElementById('domainInput');
     
+    // 🔥 ПРОВЕРКА: если анимация уже была показана в этой сессии — сразу скрываем
+    if (sessionStorage.getItem('caplink_animation_shown') === 'true') {
+        if (loadingScreen) {
+            loadingScreen.classList.add('hidden');
+        }
+        return; // Прерываем выполнение, анимация не запускается
+    }
+    
     // Текст для анимации
-    const textToType = 'БРЕНД ЖЕНСКОЙ ОДЕЖДЫ «CAPLINK»';
+    const textToType = 'БРЕНД ЖЕНСКОЙ ОДЕЖДЫ «КАПЛИНК»';
     let charIndex = 0;
-    let typingSpeed = 60; // 150ms на букву (медленнее)
+    let typingSpeed = 60; // скорость печати (мс на символ)
     
     // Функция печати текста
     function typeText() {
@@ -17,10 +25,12 @@ document.addEventListener('DOMContentLoaded', () => {
             charIndex++;
             setTimeout(typeText, typingSpeed);
         } else {
-            // После завершения печати ждем 4 секунды и скрываем
+            // 🔥 Ставим флаг, что анимация показана
+            sessionStorage.setItem('caplink_animation_shown', 'true');
+            
             setTimeout(() => {
                 loadingScreen.classList.add('hidden');
-            }, 500); // 4 секунды ожидания
+            }, 500);
         }
     }
     
@@ -34,7 +44,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 });
-
 // ========================================
 // Navbar Scroll Effect
 // ========================================
@@ -90,19 +99,24 @@ function openModal(productData) {
     }
     
     modalBody.innerHTML = `
-        <img src="${productData.image}" alt="${productData.name}">
-        <div class="modal-product-info">
-            <h3>${productData.name}</h3>
-            <p class="modal-product-price">${productData.price} ₽</p>
-            <select class="modal-size-select" id="modalSizeSelect">
-                <option value="">Выберите размер</option>
-                ${productData.sizes.map(size => `<option value="${size}">${size}</option>`).join('')}
-            </select>
-            <button onclick="addToCart(${productData.id}, document.getElementById('modalSizeSelect').value)" class="btn-add-to-cart">
-                Добавить в корзину
-            </button>
-        </div>
-    `;
+    <img src="${productData.image}" alt="${productData.name}">
+    <div class="modal-product-info">
+        <h3>${productData.name}</h3>
+        
+        <span class="modal-heart-btn" id="modal-heart-${productData.id}" onclick="toggleWishlistModal(${productData.id})" style="cursor: pointer; font-size: 1.8rem; margin: 5px 0; display: inline-block;">
+            🤍
+        </span>
+        
+        <p class="modal-product-price">${productData.price} ₽</p>
+        <select class="modal-size-select" id="modalSizeSelect">
+            <option value="">Выберите размер</option>
+            ${productData.sizes.map(size => `<option value="${size}">${size}</option>`).join('')}
+        </select>
+        <button onclick="addToCart(${productData.id}, document.getElementById('modalSizeSelect').value)" class="btn-add-to-cart">
+            Добавить в корзину
+        </button>
+    </div>
+`;
     
     modal.classList.add('active');
     
@@ -154,5 +168,53 @@ async function addToCart(productId, size) {
         }
     } catch (error) {
         console.error('Error:', error);
+    }
+}
+// ========================================
+// Toggle Wishlist from Modal (Сердечко в модальном окне)
+// ========================================
+async function toggleWishlistModal(productId) {
+    const heartBtn = document.getElementById(`modal-heart-${productId}`);
+    const csrftoken = getCookie('csrftoken');
+    
+    try {
+        const response = await fetch(`/wishlist/add/${productId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken,
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (response.ok && heartBtn) {
+            // Меняем на красное сердечко
+            heartBtn.textContent = '❤️';
+        }
+    } catch (error) {
+        console.error('Ошибка при добавлении в избранное:', error);
+    }
+}
+// ========================================
+// Toggle Wishlist from Modal (Сердечко в модальном окне)
+// ========================================
+async function toggleWishlistModal(productId) {
+    const heartBtn = document.getElementById(`modal-heart-${productId}`);
+    const csrftoken = getCookie('csrftoken');
+    
+    try {
+        const response = await fetch(`/wishlist/add/${productId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken,
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (response.ok && heartBtn) {
+            // Меняем на красное сердечко
+            heartBtn.textContent = '❤️';
+        }
+    } catch (error) {
+        console.error('Ошибка при добавлении в избранное:', error);
     }
 }

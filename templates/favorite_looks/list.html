@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% load static %}
+{% load favorite_looks_tags %}
+
+{% block title %}Избранные образы — КАПЛИНК{% endblock %}
+
+{% block content %}
+<div class="cart-container">
+    <h1 class="cart-title">Избранные образы</h1>
+    
+    {% if favorite_looks %}
+    <div class="cart-grid">
+        {% for fav in favorite_looks %}
+        <div class="cart-item">
+            <!-- ✅ ИСПРАВЛЕНО: fav.look.slug вместо look.slug -->
+            <a href="{% url 'lookbook:lookbook_detail' fav.look.slug %}" class="cart-item-link">
+                <div class="cart-item-image">
+                    {% if fav.look.image %}
+                        <img src="{{ fav.look.image.url }}" alt="{{ fav.look.title }}">
+                    {% else %}
+                        <img src="{% static 'images/no-image.jpg' %}" alt="Нет фото">
+                    {% endif %}
+                </div>
+            </a>
+            <div class="cart-item-details">
+                <!-- ✅ ИСПРАВЛЕНО: fav.look.title (судя по твоему models.py) -->
+                <h3 class="cart-item-name">{{ fav.look.title }}</h3>
+                
+                {% if fav.look.description %}
+                <p class="cart-item-desc">{{ fav.look.description|truncatewords:12 }}</p>
+                {% endif %}
+                
+                <!-- ✅ ИСПРАВЛЕНО: fav.id для удаления записи из избранного -->
+                <form action="{% url 'favorite_looks:remove' fav.look.id %}" method="post" class="delete-form">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-remove">Удалить</button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="cart-empty">
+        <p>Вы ещё не сохраняли образы</p>
+        <a href="{% url 'lookbook:lookbook_list' %}" class="btn-cart-primary">Смотреть Lookbook</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

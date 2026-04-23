@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
-
+{% load favorite_looks_tags %}
 {% block title %}{{ lookbook.name }} — Lookbook{% endblock %}
 
 {% block content %}
@@ -15,6 +15,15 @@
         <!-- Боковая панель с товарами и выбором размеров -->
         <aside class="lookbook-sidebar">
             <h1 class="sidebar-title">{{ lookbook.name }}</h1>
+            {% if user.is_authenticated %}
+                <form action="{% url 'favorite_looks:add' lookbook.id %}" method="post" style="display: inline-block; margin: 10px 0;">
+                    {% csrf_token %}
+                    {% is_look_favorited user lookbook as is_fav %}
+                    <button type="submit" style="background: none; border: none; cursor: pointer; font-size: 1.8rem;" title="Добавить образ в избранное">
+                        {% if is_fav %}❤️{% else %}🤍{% endif %}
+                    </button>
+                </form>
+            {% endif %}
             <p class="sidebar-description">{{ lookbook.description }}</p>
             
             <h3 class="sidebar-products-title">В этом образе:</h3>

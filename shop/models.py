@@ -1,10 +1,11 @@
-# shop/models.py
 from django.db import models
 from django.urls import reverse
 
 class Category(models.Model):
-    name = models.CharField(max_length=200, db_index=True)
+    name = models.CharField(max_length=200, unique=True)
     slug = models.SlugField(max_length=200, unique=True)
+    description = models.TextField(blank=True)
+    icon = models.ImageField(upload_to='categories/icons/', blank=True, null=True)
     
     class Meta:
         ordering = ['name']
@@ -15,8 +16,55 @@ class Category(models.Model):
         return self.name
     
     def get_absolute_url(self):
-        from django.urls import reverse
         return reverse('shop:product_list_by_category', args=[self.slug])
+    
+    def get_emoji(self):
+        """Возвращает emoji для категории"""
+        emojis = {
+            'верхняя одежда': '🧥',
+            'куртка': '🧥',
+            'пальто': '🧥',
+            'платья': '👗',
+            'платье': '👗',
+            'юбка': '🎀',
+            'юбки': '🎀',
+            'обувь': '👠',
+            'кроссовки': '👟',
+            'туфли': '👠',
+            'сумки': '👜',
+            'сумка': '👜',
+            'аксессуары': '💍',
+            'брюки': '👖',
+            'джинсы': '👖',
+            'штаны': '👖',
+            'футболки': '👕',
+            'футболка': '👕',
+            'майка': '👕',
+            'майки': '👕',
+            'рубашка': '👔',
+            'рубашки': '👔',
+            'блузка': '👚',
+            'блузки': '👚',
+            'помада': '💄',
+            'косметика': '💄',
+            'наушники': '🎧',
+            'часы': '⌚',
+            'очки': '🕶️',
+            'солнцезащитные очки': '🕶️',
+        }
+        
+        name_lower = self.name.lower()
+        
+        # Сначала ищем точное совпадение
+        if name_lower in emojis:
+            return emojis[name_lower]
+            
+        # Затем ищем частичное совпадение
+        for key, emoji in emojis.items():
+            if key in name_lower:
+                return emoji
+                
+        return '🏷️'
 
 
 class Product(models.Model):
@@ -75,3 +123,4 @@ class ProductSize(models.Model):
     
     def __str__(self):
         return f'{self.product.name} - {self.size}'
+    

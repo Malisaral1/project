@@ -53,6 +53,11 @@ INSTALLED_APPS = [
     'lookbook',  # должно быть
     'cart',
     'orders',
+    
+    'pages',
+    'accounts', # добавила как новое приложение
+    'wishlist',  # ← тоже новое приложение
+    'favorite_looks',
 ]
 
 MIDDLEWARE = [
@@ -62,6 +67,7 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    'accounts.middleware.AdminRedirectMiddleware', 
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
@@ -144,3 +150,17 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
 SESSION_COOKIE_HTTPONLY = True
+# Отправка писем в консоль (для разработки)
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# Редирект после входа
+LOGIN_REDIRECT_URL = '/'  # По умолчанию — на главную
+LOGOUT_REDIRECT_URL = '/'
+
+# Кастомная логика редиректа (через сигнал)
+from django.contrib.auth.signals import user_logged_in
+from django.dispatch import receiver
+
+@receiver(user_logged_in)
+def redirect_admin_to_admin_panel(sender, request, user, **kwargs):
+    if user.is_staff or user.is_superuser:
+        request.session['next_redirect'] = '/admin/'
